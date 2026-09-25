@@ -52,7 +52,6 @@ def main():
 
 
 # This function will load the users.csv file into the users table, discarding any records with incomplete data
-# This function will load the users.csv file into the users table, discarding any records with incomplete data
 def load_and_clean_users(file_path):
     cleaned_users = []
     with open(file_path, "r") as csv_file:
@@ -60,14 +59,9 @@ def load_and_clean_users(file_path):
         users = csv.reader(csv_file)
         id_count = 1
         for user in users:
-            if len(user) == 2:
-                valid = True
-                for name in user:
-                    if not name or not name.isalpha():
-                        valid = False
-                if valid:
-                    cleaned_users.append((id_count, *user))
-                    id_count += 1
+            if len(user) == 2 and all(name.strip() for name in user):
+                cleaned_users.append((id_count, *user))
+                id_count += 1
     cursor.executemany(f"INSERT INTO users (userId, firstName, lastName) VALUES (?,?,?);", cleaned_users)
 
 # This function will load the callLogs.csv file into the callLogs table, discarding any records with incomplete data
@@ -109,15 +103,16 @@ def write_user_analytics(csv_file_path):
 # Then, write the ordered callLogs to orderedCalls.csv
 def write_ordered_calls(csv_file_path):
     cursor.execute("""
-        SELECT userId, startTime FROM callLogs
+        SELECT * FROM callLogs
         ORDER BY userId ASC, startTime ASC;
     """)
     rows = cursor.fetchall()
 
     with open(csv_file_path, "w", newline="") as csv_file:
         csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(["userId","startTime"])
+        csv_writer.writerow(["callId","phoneNumber","startTime","endTime","direction","userId"])
         csv_writer.writerows(rows)
+
 
 # No need to touch the functions below!------------------------------------------
 
